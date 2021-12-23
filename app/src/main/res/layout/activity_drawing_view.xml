@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.DrawingViewActivity">
+
+    <FrameLayout
+        android:id="@+id/drawing_view_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="7dp"
+        android:background="@drawable/bg_rounded_white"
+        android:padding="1dp"
+        app:layout_constraintBottom_toTopOf="@id/drawing_options"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/iv_background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/me" />
+
+        <lostankit7.droid.drawingapp.ui.DrawingView
+            android:id="@+id/drawing_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/drawing_options"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <lostankit7.droid.CustomTextView
+            android:id="@+id/saveDrawing"
+            style="@style/BottomIconStyle"
+            android:text="@string/fas_save_icon"
+            app:fa_solid="true" />
+        <lostankit7.droid.CustomTextView
+            android:id="@+id/shareDrawing"
+            style="@style/BottomIconStyle"
+            android:text="@string/fas_share_icon"
+            app:fa_solid="true" />
+
+        <lostankit7.droid.CustomTextView
+            android:id="@+id/undoPaint"
+            style="@style/BottomIconStyle"
+            android:text="@string/fas_undo_icon"
+            app:fa_solid="true" />
+
+        <lostankit7.droid.CustomTextView
+            android:id="@+id/redoPaint"
+            style="@style/BottomIconStyle"
+            android:text="@string/fas_redo_icon"
+            app:fa_solid="true" />
+
+        <lostankit7.droid.CustomTextView
+            android:id="@+id/brushSelector"
+            style="@style/BottomIconStyle"
+            android:text="@string/fas_brush_icon"
+            app:fa_solid="true" />
+
+        <lostankit7.droid.CustomTextView
+            android:id="@+id/openGallery"
+            style="@style/BottomIconStyle"
+            app:fa_regular="true"
+            android:text="@string/fas_gallery_icon" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

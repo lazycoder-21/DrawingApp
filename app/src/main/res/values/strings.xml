@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">DrawingApp</string>
+
+    <string name="fas_brush_icon">\uf1fc</string>
+    <string name="fas_gallery_icon">\uf03e</string>
+    <string name="fas_undo_icon">\uf100</string>
+    <string name="fas_redo_icon">\uf101</string>
+    <string name="fas_save_icon">\uf0c7</string>
+    <string name="fas_share_icon">\uf1e0</string>
+</resources>
