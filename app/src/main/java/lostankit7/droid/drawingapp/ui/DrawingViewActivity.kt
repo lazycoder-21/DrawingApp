@@ -1,21 +1,15 @@
 package lostankit7.droid.drawingapp.ui
 
 import android.Manifest
-import android.app.Activity
-import android.content.ContentValues
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
+import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
-import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.skydoves.colorpickerview.ColorEnvelope
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
 import lostankit7.droid.drawingapp.databinding.ActivityDrawingViewBinding
@@ -26,86 +20,40 @@ import lostankit7.droid.helper.deviceIndependentValue
 
 class DrawingViewActivity : AppCompatActivity() {
 
+    private var isPrivate = false
     private lateinit var binding: ActivityDrawingViewBinding
     private val dialogBindingBrush by lazy { DialogCustomizeBrushBinding.inflate(layoutInflater) }
     private val dialogBrush by lazy { showCustomDialog(dialogBindingBrush.root) }
-    private lateinit var imagePicker: ActivityResultLauncher<Intent>
-    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var pickImageFromGallery: ActivityResultLauncher<Intent>
+
+    private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
+    private var isReadGranted = false
+    private var isWriteGranted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDrawingViewBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.initClickListener()
-        registerCallbacks()
-
+        registerActivityCallbacks()
+        updatePermissionLauncher()
         updateBrushThickness(10)
+
+        binding.initClickListener()
+
     }
 
-    private fun registerCallbacks() {
-        imagePicker =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result?.resultCode == Activity.RESULT_OK && result.data != null) {
-                    result.data?.let { intent ->
-                        binding.ivBackground.setImageURI(intent.data)
-                    }
-                }
-            }
-        requestPermissionLauncher =
-            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-                if (isGranted) {
-                    saveDrawing()
-                } else {
-                    showToast("Oops 😟 you just denied the permission")
-                }
-            }
-    }
-
-    private fun shareDrawing(uri: Uri) {
-        val intent = Intent(Intent.ACTION_SEND).also {
-            it.putExtra(Intent.EXTRA_STREAM, uri)
-            it.type = "image/png"
+    private fun registerActivityCallbacks() {
+        pickImageFromGallery = pickImageFromGallery {
+            binding.ivDrawingViewBg.setImageURI(it)
         }
-        startActivity(
-            Intent.createChooser(
-                intent, "Share 💫"
-            )
-        )
 
-    }
-
-    private fun saveDrawing(share: Boolean = false) {
-        val cv = ContentValues().also {
-            it.put(MediaStore.MediaColumns.DISPLAY_NAME, "$DRAWING_NAME.jpg")
-            it.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                it.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
-            }
-        }
-        val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cv) ?: return
-        if (share)
-            shareDrawing(uri)
-        else {
-            val oos = contentResolver.openOutputStream(uri)
-            binding.drawingViewContainer.getBitmap().compress(Bitmap.CompressFormat.JPEG, 100, oos)
-            showToast("✍🏻Image Saved To Gallery 🤝")
-        }
-    }
-
-    private fun View.getBitmap(): Bitmap {
-        val bitmap = Bitmap.createBitmap(this.width, this.height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        val viewBg = this.background
-        if (viewBg == null) canvas.drawColor(Color.WHITE) else viewBg.draw(canvas)
-        this.draw(canvas)
-        return bitmap
     }
 
     private fun customizeBrush() {
         dialogBrush.show()
 
-        dialogBindingBrush.sbBrushSize.getSeekBarValue {
+        dialogBindingBrush.sbBrushSize.onProgressChanged {
             updateBrushThickness(it)
         }
         dialogBindingBrush.colorPickerView.setColorListener(object : ColorEnvelopeListener {
@@ -136,19 +84,63 @@ class DrawingViewActivity : AppCompatActivity() {
 
     private fun ActivityDrawingViewBinding.initClickListener() {
         brushSelector.setOnClickListener { customizeBrush() }
-        openGallery.setOnClickListener { imagePicker.launch(intentChooseSingleImage) }
         undoPaint.setOnClickListener { binding.drawingView.undoPaint() }
         redoPaint.setOnClickListener { binding.drawingView.redoPaint() }
+
+        openGallery.setOnClickListener { pickImageFromGallery.launch(intentChooseSingleImage) }
+
         saveDrawing.setOnClickListener {
-            requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            updateOrRequestPermission()
+            saveDrawing()
         }
         shareDrawing.setOnClickListener {
-            saveDrawing(true)
+
         }
     }
 
-    companion object {
-        private const val DRAWING_NAME = "MyDrawing"
+    private fun saveDrawing() {
+        val bitmap = binding.drawingViewContainer.getBitmap()
+        val savedSuccessfully = when {
+            isPrivate -> savePhotoToInternalStorage(bitmap)
+            isWriteGranted -> savePhotoToExternalStorage(bitmap)
+            else -> false
+        }
+        showToast(if (savedSuccessfully) "Photo saved successfully" else "Failed to save photo")
+    }
+
+    private fun updatePermissionLauncher() {
+        permissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+                isReadGranted =
+                    permissions[Manifest.permission.READ_EXTERNAL_STORAGE] ?: isReadGranted
+                isWriteGranted =
+                    permissions[Manifest.permission.WRITE_EXTERNAL_STORAGE] ?: isWriteGranted
+            }
+    }
+
+    private fun updateOrRequestPermission() {
+        isReadGranted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val minSdk29 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+        isWriteGranted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED || minSdk29
+
+        val permissionsToRequest = mutableListOf<String>()
+        if (!isWriteGranted) {
+            permissionsToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        }
+        if (!isReadGranted) {
+            permissionsToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+
+        if (permissionsToRequest.isNotEmpty()) {
+            permissionLauncher.launch(permissionsToRequest.toTypedArray())
+        }
     }
 }
 
