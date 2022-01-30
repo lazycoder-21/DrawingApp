@@ -22,8 +22,7 @@
             android:id="@+id/ivDrawingViewBg"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:src="@drawable/me" />
+            android:scaleType="centerCrop" />
 
         <lostankit7.droid.drawingapp.ui.DrawingView
             android:id="@+id/drawing_view"

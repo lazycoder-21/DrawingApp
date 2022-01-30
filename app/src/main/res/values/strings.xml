@@ -7,4 +7,5 @@
     <string name="fas_redo_icon">\uf101</string>
     <string name="fas_save_icon">\uf0c7</string>
     <string name="fas_share_icon">\uf1e0</string>
+    <string name="bottom_sheet_choose_image_option">Choose Image Option</string>
 </resources>

@@ -4,7 +4,9 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/kumar/AndroidStudioProjects/DrawingApp/app/src/main/res/layout/activity_drawing_view.xml" value="0.20625" />
+        <entry key="..\:/Users/kumar/AndroidStudioProjects/DrawingApp/app/src/main/res/layout/bottom_sheet_image_options.xml" value="0.33645833333333336" />
         <entry key="..\:/Users/kumar/AndroidStudioProjects/DrawingApp/app/src/main/res/layout/dialog_customize_brush.xml" value="0.2234375" />
+        <entry key="..\:/Users/kumar/AndroidStudioProjects/DrawingApp/app/src/main/res/menu/menu_options.xml" value="0.33645833333333336" />
       </map>
     </option>
   </component>

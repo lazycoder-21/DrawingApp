@@ -9,9 +9,11 @@ import android.os.Bundle
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import com.skydoves.colorpickerview.ColorEnvelope
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
+import lostankit7.droid.drawingapp.R
 import lostankit7.droid.drawingapp.databinding.ActivityDrawingViewBinding
 import lostankit7.droid.drawingapp.databinding.DialogCustomizeBrushBinding
 import lostankit7.droid.drawingapp.helper.*
@@ -24,7 +26,9 @@ class DrawingViewActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDrawingViewBinding
     private val dialogBindingBrush by lazy { DialogCustomizeBrushBinding.inflate(layoutInflater) }
     private val dialogBrush by lazy { showCustomDialog(dialogBindingBrush.root) }
+
     private lateinit var pickImageFromGallery: ActivityResultLauncher<Intent>
+    private lateinit var takeImageFromCamera: ActivityResultLauncher<Void>
 
     private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
     private var isReadGranted = false
@@ -40,7 +44,6 @@ class DrawingViewActivity : AppCompatActivity() {
         updateBrushThickness(10)
 
         binding.initClickListener()
-
     }
 
     private fun registerActivityCallbacks() {
@@ -48,6 +51,9 @@ class DrawingViewActivity : AppCompatActivity() {
             binding.ivDrawingViewBg.setImageURI(it)
         }
 
+        takeImageFromCamera = takePhotoFromCamera {
+            binding.ivDrawingViewBg.setImageBitmap(it)
+        }
     }
 
     private fun customizeBrush() {
@@ -87,22 +93,26 @@ class DrawingViewActivity : AppCompatActivity() {
         undoPaint.setOnClickListener { binding.drawingView.undoPaint() }
         redoPaint.setOnClickListener { binding.drawingView.redoPaint() }
 
-        openGallery.setOnClickListener { pickImageFromGallery.launch(intentChooseSingleImage) }
+        openGallery.setOnClickListener {
+            showImageOptions()
+        }
 
         saveDrawing.setOnClickListener {
-            updateOrRequestPermission()
             saveDrawing()
         }
         shareDrawing.setOnClickListener {
-
+            saveDrawing(true)
         }
     }
 
-    private fun saveDrawing() {
+    private fun saveDrawing(share: Boolean = false) {
+        updateOrRequestPermission()
         val bitmap = binding.drawingViewContainer.getBitmap()
         val savedSuccessfully = when {
             isPrivate -> savePhotoToInternalStorage(bitmap)
-            isWriteGranted -> savePhotoToExternalStorage(bitmap)
+            isWriteGranted -> savePhotoToExternalStorage(bitmap, {
+                if (share) shareDrawing(it)
+            })
             else -> false
         }
         showToast(if (savedSuccessfully) "Photo saved successfully" else "Failed to save photo")
@@ -140,6 +150,30 @@ class DrawingViewActivity : AppCompatActivity() {
 
         if (permissionsToRequest.isNotEmpty()) {
             permissionLauncher.launch(permissionsToRequest.toTypedArray())
+        }
+    }
+
+    private fun showImageOptions() {
+        PopupMenu(this, binding.openGallery).apply {
+            setOnMenuItemClickListener {
+                when (it.itemId) {
+                    R.id.noImage -> {
+                        binding.ivDrawingViewBg.setImageURI(null)
+                        true
+                    }
+                    R.id.takePhotoFromCamera -> {
+                        takeImageFromCamera.launch(null)
+                        true
+                    }
+                    R.id.chooseFromGallery -> {
+                        pickImageFromGallery.launch(intentChooseSingleImage)
+                        true
+                    }
+                    else -> false
+                }
+            }
+            inflate(R.menu.image_picker_options)
+            show()
         }
     }
 }

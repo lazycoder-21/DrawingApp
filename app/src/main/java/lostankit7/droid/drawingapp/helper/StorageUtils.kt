@@ -18,8 +18,8 @@ inline fun <T> sdk29OrAbove(onSdk29: () -> T): T? {
     } else null
 }
 
-fun AppCompatActivity.takePhotoFromCamera(block: (Bitmap) -> Unit) {
-    registerForActivityResult(ActivityResultContracts.TakePicturePreview()) {
+fun AppCompatActivity.takePhotoFromCamera(block: (Bitmap) -> Unit): ActivityResultLauncher<Void> {
+    return registerForActivityResult(ActivityResultContracts.TakePicturePreview()) {
         block(it)
     }
 }
@@ -63,6 +63,7 @@ fun Activity.savePhotoToInternalStorage(
 
 fun Activity.savePhotoToExternalStorage(
     bmp: Bitmap,
+    block: (Uri) -> Unit,
     displayName: String = System.currentTimeMillis().toString()
 ): Boolean {
     val imageCollection = sdk29OrAbove {
@@ -82,6 +83,7 @@ fun Activity.savePhotoToExternalStorage(
                     throw IOException("Couldn't save bitmap")
                 }
             }
+            block(uri)
         } ?: throw IOException("Couldn't create MediaStore entry")
         true
     } catch (e: IOException) {

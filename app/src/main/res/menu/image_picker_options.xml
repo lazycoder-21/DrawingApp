@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/noImage"
+        android:title="No Image" />
+    <item
+        android:id="@+id/chooseFromGallery"
+        android:title="Choose From Gallery" />
+    <item
+        android:id="@+id/takePhotoFromCamera"
+        android:title="Take Photo From Camera" />
+</menu>

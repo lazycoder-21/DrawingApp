@@ -20,10 +20,10 @@ fun Context.showToast(message: String) {
     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 }
 
-fun Context.shareDrawing(uri: Uri) {
+fun Activity.shareDrawing(uri: Uri) {
     val intent = Intent(Intent.ACTION_SEND).also {
         it.putExtra(Intent.EXTRA_STREAM, uri)
-        it.type = "image/png"
+        it.type = "image/jpeg"
     }
     startActivity(
         Intent.createChooser(
